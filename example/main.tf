@@ -1,4 +1,3 @@
-data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "random_id" "suffix" {
@@ -8,18 +7,6 @@ resource "random_id" "suffix" {
 data "aws_route53_zone" "selected" {
   name         = "example.com."
   private_zone = false
-}
-
-locals {
-  name_prefix           = "fargate-service"
-  region                = data.aws_region.current.name
-  account_id            = data.aws_caller_identity.current.account_id
-  suffix                = random_id.suffix.hex
-  route53_zone_id       = data.aws_route53_zone.selected.zone_id
-  target_container_port = 8080
-  tags = {
-    "Hello" : "World",
-  }
 }
 
 module "vpc" {
@@ -42,10 +29,14 @@ module "s3_bucket_for_logs" {
   attach_elb_log_delivery_policy = true
 }
 
-#######################################
-# alb, ecs cluster
-
 locals {
+  name_prefix           = "fargate-service"
+  region                = data.aws_region.current.name
+  suffix                = random_id.suffix.hex
+  route53_zone_id       = data.aws_route53_zone.selected.zone_id
+  tags = {
+    "Hello" : "World",
+  }
   containers = [
     {
       name = "${local.name_prefix}-tomcat"
@@ -81,8 +72,13 @@ module "alb_for_fargate" {
   access_logs_prefix = "helloprefix"
 }
 
+resource "aws_ecr_repository" "main" {
+  name                 = "${local.name_prefix}-main-${local.suffix}"
+  image_tag_mutability = "IMMUTABLE"
+}
+
 #######################################
-# ECS Service, task definition, ECR
+# ECS Service, task definition
 
 module "ecs_service" {
   count = length(local.containers)
@@ -138,11 +134,6 @@ module "ecs_service" {
       { name : "hello", value : "world" },
     ]
   }])
-}
-
-resource "aws_ecr_repository" "main" {
-  name                 = "${local.name_prefix}-main-${local.suffix}"
-  image_tag_mutability = "IMMUTABLE"
 }
 
 output "output" {
