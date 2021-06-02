@@ -25,63 +25,59 @@ module "s3_bucket_for_logs" {
   acl    = "log-delivery-write"
 
   # Allow deletion of non-empty bucket
-  force_destroy = true
+  force_destroy                  = true
   attach_elb_log_delivery_policy = true
 }
 
 locals {
-  name_prefix           = "fargate-service"
-  region                = data.aws_region.current.name
-  suffix                = random_id.suffix.hex
-  route53_zone_id       = data.aws_route53_zone.selected.zone_id
+  name_prefix     = "fargate-service"
+  region          = data.aws_region.current.name
+  suffix          = random_id.suffix.hex
+  route53_zone_id = data.aws_route53_zone.selected.zone_id
   tags = {
     "Hello" : "World",
   }
   containers = [
     {
-      name = "${local.name_prefix}-tomcat"
-      log_group_name = "/ecs/tomcat"
-      image = "500000000002.dkr.ecr.ap-northeast-2.amazonaws.com/fargate-service-main-58f11a:v2"
-      backend_port = 8080
-      health_check_port = 8080
-      health_check_path = "/"
-      domain = "tomcat.example.com"
-    },
-    {
-      name = "${local.name_prefix}-nginx"
-      log_group_name = "/ecs/nginx"
-      image = "nginx:1.19.9-alpine"
-      backend_port = 80
+      name              = "${local.name_prefix}-httpd"
+      log_group_name    = "/ecs/httpd"
+      image             = "httpd:2.4.48-alpine"
+      backend_port      = 80
       health_check_port = 80
       health_check_path = "/"
-      domain = "nginx.example.com"
+      domain            = "httpd.example.com"
+    },
+    {
+      name              = "${local.name_prefix}-nginx"
+      log_group_name    = "/ecs/nginx"
+      image             = "nginx:1.19.9-alpine"
+      backend_port      = 80
+      health_check_port = 80
+      health_check_path = "/"
+      domain            = "nginx.example.com"
     }
   ]
 }
 
 module "alb_for_fargate" {
-  source                     = "../"
-  vpc_id                     = module.vpc.vpc_id
-  public_subnet_ids          = module.vpc.public_subnets
-  public_subnets_cidr_blocks = module.vpc.public_subnets_cidr_blocks
-  route53_zone_id            = data.aws_route53_zone.selected.zone_id
-  containers                 = local.containers
+  source              = "../"
+  name_prefix         = "fargate-service"
+  vpc_id              = module.vpc.vpc_id
+  subnet_ids          = module.vpc.public_subnets
+  subnets_cidr_blocks = module.vpc.public_subnets_cidr_blocks
+  route53_zone_id     = data.aws_route53_zone.selected.zone_id
+  containers          = local.containers
 
   access_logs_enabled = true
-  access_logs_bucket = module.s3_bucket_for_logs.s3_bucket_id
-  access_logs_prefix = "helloprefix"
-}
-
-resource "aws_ecr_repository" "main" {
-  name                 = "${local.name_prefix}-main-${local.suffix}"
-  image_tag_mutability = "IMMUTABLE"
+  access_logs_bucket  = module.s3_bucket_for_logs.s3_bucket_id
+  access_logs_prefix  = "helloprefix"
 }
 
 #######################################
 # ECS Service, task definition
 
 module "ecs_service" {
-  count = length(local.containers)
+  count                  = length(local.containers)
   source                 = "trussworks/ecs-service/aws"
   name                   = "${local.name_prefix}-${count.index}-${local.suffix}"
   environment            = local.suffix
@@ -99,10 +95,10 @@ module "ecs_service" {
   ]
 
   ecs_cluster                 = module.alb_for_fargate.aws_ecs_cluster
-  ecs_subnet_ids              = module.vpc.public_subnets // TODO: when NAT is used, check that private subnets is availabled
   ecs_vpc_id                  = module.vpc.vpc_id
-  ecs_use_fargate             = true
+  ecs_subnet_ids              = module.vpc.public_subnets  // In this example, use public subnet for pulling docker images.
   assign_public_ip            = true
+  ecs_use_fargate             = true
   kms_key_id                  = module.alb_for_fargate.kms_key_arn
   cloudwatch_alarm_cpu_enable = false
   cloudwatch_alarm_mem_enable = false
@@ -111,7 +107,7 @@ module "ecs_service" {
   fargate_task_memory         = 512
   fargate_task_cpu            = 256
 
-  container_definitions       = jsonencode([{
+  container_definitions = jsonencode([{
     name      = local.containers[count.index].name
     image     = local.containers[count.index].image
     essential = true
@@ -139,7 +135,7 @@ module "ecs_service" {
 output "output" {
   description = "Resource information"
   value       = <<EOT
-export ECR_REPOSITORY_URL=${aws_ecr_repository.main.repository_url}
-
+- tomcat domain: ${local.containers[0].domain}
+- nginx domain: ${local.containers[1].domain}
 EOT
 }

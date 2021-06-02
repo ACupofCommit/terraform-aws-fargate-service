@@ -23,7 +23,7 @@ module "alb" {
   name               = "${var.name_prefix}-service"
   load_balancer_type = "application"
   vpc_id             = var.vpc_id
-  subnets            = var.public_subnet_ids
+  subnets            = var.subnet_ids
   security_groups    = [module.alb_security_group.security_group_id]
   internal           = false
 
@@ -87,9 +87,7 @@ module "alb" {
     }
   ]
 
-  tags = {
-    Environment = "Test"
-  }
+  tags = var.tags
 }
 
 #######################################
@@ -159,7 +157,7 @@ module "alb_security_group" {
   ]
 
   egress_with_cidr_blocks = flatten([
-    for i, cidr_block in var.public_subnets_cidr_blocks : [for j, c in var.containers : {
+    for i, cidr_block in var.subnets_cidr_blocks : [for j, c in var.containers : {
       from_port   = c.backend_port
       to_port     = c.backend_port
       protocol    = "tcp"

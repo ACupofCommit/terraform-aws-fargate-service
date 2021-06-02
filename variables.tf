@@ -1,6 +1,5 @@
 variable "name_prefix" {
   type        = string
-  default     = "terraform-es"
   description = "For most of resource names"
 }
 
@@ -20,18 +19,18 @@ variable "vpc_id" {
   description = "If you provide vpc_id, elasticsearch will be deployed in that vpc. Or it is distributed outside the vpc."
 }
 
-variable "public_subnet_ids" {
+variable "subnet_ids" {
   type    = list(string)
   default = []
+}
+
+variable "subnets_cidr_blocks" {
+  type = list(string)
 }
 
 variable "tags" {
   type    = map(string)
   default = {}
-}
-
-variable "public_subnets_cidr_blocks" {
-  type = list(string)
 }
 
 variable "create_ecr" {
