@@ -137,6 +137,10 @@ resource "aws_kms_key" "main" {
 #######################################
 # alb security group
 
+locals {
+  backend_ports = distinct([for c in var.containers : c.backend_port])
+}
+
 module "alb_security_group" {
   source      = "terraform-aws-modules/security-group/aws"
   name        = "${var.name_prefix}-service-${local.suffix}"
@@ -157,12 +161,12 @@ module "alb_security_group" {
   ]
 
   egress_with_cidr_blocks = flatten([
-    for i, cidr_block in var.subnets_cidr_blocks : [for j, c in var.containers : {
-      from_port   = c.backend_port
-      to_port     = c.backend_port
+    for i, cidr_block in var.subnets_cidr_blocks : [for port in local.backend_ports : {
+      from_port   = port
+      to_port     = port
       protocol    = "tcp"
       cidr_blocks = cidr_block
-      description = "container port ${c.backend_port}"
+      description = "container port ${port}"
     }]
   ])
 }
