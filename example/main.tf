@@ -64,9 +64,9 @@ module "alb_for_fargate" {
   name_prefix         = "fargate-service"
   vpc_id              = module.vpc.vpc_id
   subnet_ids          = module.vpc.public_subnets
-  subnets_cidr_blocks = module.vpc.public_subnets_cidr_blocks
   route53_zone_id     = data.aws_route53_zone.selected.zone_id
   containers          = local.containers
+  alb_egress_cidrs    = module.vpc.public_subnets
 
   access_logs_enabled = true
   access_logs_bucket  = module.s3_bucket_for_logs.s3_bucket_id
@@ -97,6 +97,7 @@ module "ecs_service" {
   ecs_cluster                 = module.alb_for_fargate.aws_ecs_cluster
   ecs_vpc_id                  = module.vpc.vpc_id
   ecs_subnet_ids              = module.vpc.public_subnets  // In this example, use public subnet for pulling docker images.
+                                                           // If you have NAT, you can use private subnets with "assign_public_ip: false"
   assign_public_ip            = true
   ecs_use_fargate             = true
   kms_key_id                  = module.alb_for_fargate.kms_key_arn

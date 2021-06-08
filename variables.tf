@@ -24,7 +24,7 @@ variable "subnet_ids" {
   default = []
 }
 
-variable "subnets_cidr_blocks" {
+variable "alb_egress_cidrs" {
   type = list(string)
 }
 

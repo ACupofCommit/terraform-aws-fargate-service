@@ -36,13 +36,13 @@ $ terraform apply
 | access\_logs\_bucket | n/a | `string` | `null` | no |
 | access\_logs\_enabled | n/a | `bool` | `false` | no |
 | access\_logs\_prefix | n/a | `string` | `null` | no |
+| alb\_egress\_cidrs | n/a | `list(string)` | n/a | yes |
 | containers | n/a | <pre>list(object({<br>    name              = string<br>    backend_port      = number<br>    health_check_port = number<br>    health_check_path = string<br>    domain            = string<br>  }))</pre> | n/a | yes |
 | create\_ecr | n/a | `bool` | `true` | no |
-| name\_prefix | For most of resource names | `string` | `"terraform-es"` | no |
+| name\_prefix | For most of resource names | `string` | n/a | yes |
 | name\_suffix | If omitted, random string is used. | `string` | `""` | no |
-| public\_subnet\_ids | n/a | `list(string)` | `[]` | no |
-| public\_subnets\_cidr\_blocks | n/a | `list(string)` | n/a | yes |
 | route53\_zone\_id | Route53 zone id for kibana\_proxy\_host | `string` | n/a | yes |
+| subnet\_ids | n/a | `list(string)` | `[]` | no |
 | tags | n/a | `map(string)` | `{}` | no |
 | vpc\_id | If you provide vpc\_id, elasticsearch will be deployed in that vpc. Or it is distributed outside the vpc. | `string` | n/a | yes |
 
