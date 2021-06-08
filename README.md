@@ -37,6 +37,7 @@ $ terraform apply
 | access\_logs\_enabled | n/a | `bool` | `false` | no |
 | access\_logs\_prefix | n/a | `string` | `null` | no |
 | alb\_egress\_cidrs | n/a | `list(string)` | n/a | yes |
+| alb\_ingress\_cidrs | n/a | `list(string)` | <pre>[<br>  "0.0.0.0/0"<br>]</pre> | no |
 | containers | n/a | <pre>list(object({<br>    name              = string<br>    backend_port      = number<br>    health_check_port = number<br>    health_check_path = string<br>    domain            = string<br>  }))</pre> | n/a | yes |
 | create\_ecr | n/a | `bool` | `true` | no |
 | name\_prefix | For most of resource names | `string` | n/a | yes |

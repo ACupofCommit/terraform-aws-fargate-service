@@ -147,18 +147,15 @@ module "alb_security_group" {
   description = "${var.name_prefix} security group"
   vpc_id      = var.vpc_id
   tags        = var.tags
-  ingress_with_cidr_blocks = [
-    {
-      rule        = "http-80-tcp"
-      cidr_blocks = "0.0.0.0/0"
-      description = "service port 80"
-    },
-    {
-      rule        = "https-443-tcp"
-      cidr_blocks = "0.0.0.0/0"
-      description = "service port 443"
-    },
-  ]
+  ingress_with_cidr_blocks = flatten([for cidr in var.alb_ingress_cidrs: [{
+    rule        = "http-80-tcp"
+    cidr_blocks = cidr
+    description = "${var.name_prefix} alb service port 80"
+  }, {
+    rule        = "https-443-tcp"
+    cidr_blocks = cidr
+    description = "${var.name_prefix} alb service port 443"
+  }]])
 
   egress_with_cidr_blocks = flatten([
     for i, cidr_block in var.alb_egress_cidrs : [for port in local.backend_ports : {

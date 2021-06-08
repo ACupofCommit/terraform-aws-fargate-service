@@ -70,7 +70,7 @@ module "alb_for_fargate" {
 
   access_logs_enabled = true
   access_logs_bucket  = module.s3_bucket_for_logs.s3_bucket_id
-  access_logs_prefix  = "helloprefix"
+  access_logs_prefix  = "alb-log"
 }
 
 #######################################

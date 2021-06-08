@@ -24,6 +24,11 @@ variable "subnet_ids" {
   default = []
 }
 
+variable "alb_ingress_cidrs" {
+  type = list(string)
+  default = ["0.0.0.0/0"]
+}
+
 variable "alb_egress_cidrs" {
   type = list(string)
 }
