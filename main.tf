@@ -161,7 +161,7 @@ module "alb_security_group" {
   ]
 
   egress_with_cidr_blocks = flatten([
-    for i, cidr_block in var.subnets_cidr_blocks : [for port in local.backend_ports : {
+    for i, cidr_block in var.alb_egress_cidrs : [for port in local.backend_ports : {
       from_port   = port
       to_port     = port
       protocol    = "tcp"
